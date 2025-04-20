@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sleek To-Do App</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f9f9f9;
+        padding: 30px;
+        color: #333;
+      }
+      h1 {
+        text-align: center;
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: #444;
+      }
+      #task-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 400px;
+        margin: 0 auto 30px;
+      }
+      input,
+      button,
+      select {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .filters {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .filters select {
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+      }
+      .task {
+        background: white;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin: 10px auto;
+        max-width: 400px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s;
+      }
+      .task:hover {
+        transform: scale(1.01);
+      }
+      .task-content {
+        flex: 1;
+        margin-right: 10px;
+      }
+      .task-content.completed span {
+        text-decoration: line-through;
+        color: #999;
+      }
+      .task-buttons button {
+        background: none;
+        border: none;
+        margin-left: 6px;
+        cursor: pointer;
+        color: #555;
+      }
+      .task-buttons button:hover {
+        color: #000;
+      }
+      footer {
+        text-align: center;
+        margin-top: 40px;
+        color: #777;
+        font-size: 0.9rem;
+        padding: 10px 0;
+        border-top: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📝 My To-Do List</h1>
+
+    <form id="task-form">
+      <input type="text" id="task-input" placeholder="New task..." required />
+      <input type="date" id="date-input" required />
+      <button type="submit">Add Task</button>
+    </form>
+
+    <div class="filters">
+      <label for="filter">Filter:</label>
+      <select id="filter">
+        <option value="all">All</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+
+    <div id="tasks"></div>
+
+    <footer>
+      <p>© BKRM 2025</p>
+    </footer>
+
+    <script>
+      const taskForm = document.getElementById("task-form");
+      const taskInput = document.getElementById("task-input");
+      const dateInput = document.getElementById("date-input");
+      const tasksContainer = document.getElementById("tasks");
+      const filterSelect = document.getElementById("filter");
+
+      let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+      function renderTasks() {
+        const filter = filterSelect.value;
+        tasksContainer.innerHTML = "";
+
+        tasks.forEach((task, index) => {
+          if (filter === "completed" && !task.completed) return;
+          if (filter === "pending" && task.completed) return;
+
+          const taskEl = document.createElement("div");
+          taskEl.className = "task";
+
+          const contentDiv = document.createElement("div");
+          contentDiv.className =
+            "task-content" + (task.completed ? " completed" : "");
+          contentDiv.innerHTML = `
+          <span><strong>${task.text}</strong></span>
+          <span>📅 ${task.date}</span>
+        `;
+
+          const btnsDiv = document.createElement("div");
+          btnsDiv.className = "task-buttons";
+
+          btnsDiv.innerHTML = `
+          <button onclick="toggleComplete(${index})" title="Mark complete/incomplete">✔️</button>
+          <button onclick="editTask(${index})" title="Edit">✏️</button>
+          <button onclick="deleteTask(${index})" title="Delete">🗑️</button>
+        `;
+
+          taskEl.appendChild(contentDiv);
+          taskEl.appendChild(btnsDiv);
+          tasksContainer.appendChild(taskEl);
+        });
+      }
+
+      function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+
+      taskForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const text = taskInput.value.trim();
+        const date = dateInput.value;
+        if (text && date) {
+          tasks.push({ text, date, completed: false });
+          saveTasks();
+          renderTasks();
+          taskInput.value = "";
+          dateInput.value = "";
+        }
+      });
+
+      function deleteTask(index) {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderTasks();
+      }
+
+      function toggleComplete(index) {
+        tasks[index].completed = !tasks[index].completed;
+        saveTasks();
+        renderTasks();
+      }
+
+      function editTask(index) {
+        const newText = prompt("Edit your task:", tasks[index].text);
+        if (newText !== null && newText.trim() !== "") {
+          tasks[index].text = newText.trim();
+          saveTasks();
+          renderTasks();
+        }
+      }
+
+      filterSelect.addEventListener("change", renderTasks);
+
+      renderTasks();
+    </script>
+  </body>
+</html>
